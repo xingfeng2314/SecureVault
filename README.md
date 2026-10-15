@@ -52,4 +52,4 @@ The OAuth client in this repo is bound to the original signing key, so builds si
 
 ## License
 
-Not yet specified.
+[MIT](LICENSE)

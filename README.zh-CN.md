@@ -52,4 +52,4 @@ git clone https://github.com/xingfeng2314/SecureVault.git
 
 ## 许可证
 
-暂未指定。
+[MIT](LICENSE)
