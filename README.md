@@ -1,32 +1,55 @@
 # SecureVault
 
-本地加密账号管理器（Android）
+English | [简体中文](README.zh-CN.md)
 
-## 当前进度：阶段 1~4 完成
+SecureVault is an offline-first password manager and private vault for Android, built with Kotlin and Jetpack Compose. Everything is encrypted on the device; nothing leaves your phone unless you turn on encrypted Google Drive backup.
 
-### 已实现功能
-- 多标签系统（一个账号可属于多个标签，支持筛选）
-- 账号增删改查
-- 密码 AES-GCM 加密存储（主密码保护）
-- Have I Been Pwned 泄露查询入口
-- 深色安全风格 UI（海军蓝 + 青色）
+## Features
 
-### 重要说明
-1. **主密码**：当前代码里为了演示写死了 `"demo123"`，正式使用请改成用户设置的主密码，并加上解锁界面。
-2. **HIBP**：需要到 https://haveibeenpwned.com/API/Key 申请 API Key，然后替换 `HibpClient.kt` 中的 `API_KEY`。
-3. **存储**：当前使用本地 JSON 文件。二次开发建议换成 Room + SQLCipher。
-4. **加密**：`CryptoUtils` 使用 PBKDF2 + AES-GCM，可直接使用，也可升级为 Android Keystore。
+- **Password vault**: save accounts with tags, search, copy password (clipboard marked sensitive and cleared after 30 s) and view password.
+- **Photo & document vault**: store photos of important cards and files such as PDF and Word, with tags, rename and long-press delete. PDFs open inside the app.
+- **Password generator** using `SecureRandom`.
+- **Breach check** via the free [Pwned Passwords](https://haveibeenpwned.com/API/v3#PwnedPasswords) k-anonymity API. Only the first 5 characters of the SHA-1 hash are sent.
+- **Fingerprint unlock** with an Android Keystore key that is invalidated when new fingerprints are enrolled.
+- **Auto-lock** 30 seconds after the app goes to the background, and screenshots are blocked (`FLAG_SECURE`).
+- **Encrypted backup** to a local `.svbak` file or automatically to your own Google Drive (keeps the last 3 copies).
 
-### 如何运行
-1. 用 Android Studio 打开 `SecureVault` 文件夹
-2. Gradle Sync
-3. 运行到模拟器或真机
+## Security design
 
-### 二次开发建议
-- 增加主密码设置/验证界面
-- 把存储换成 Room
-- 增加密码生成器、搜索、自动锁定
-- 标签颜色自定义
-- 导出加密备份
+- Master password → PBKDF2-HMAC-SHA256 (210,000 iterations) → key that wraps a random 256-bit data key.
+- Data and files are encrypted with AES-256-GCM, in 1 MB chunks with a unique IV per chunk.
+- Backups are encrypted before upload; the Drive job never has access to your keys.
+- Google Drive access uses the `drive.file` scope, so the app can only see files it created.
+- Android system backup is disabled (`allowBackup="false"`).
 
-项目采用清晰分层，方便你继续扩展。
+If you forget the master password, your data cannot be recovered.
+
+## Build
+
+Requirements: Android Studio, JDK 17, Android 8.0 (API 26) or later.
+
+```bash
+git clone https://github.com/xingfeng2314/SecureVault.git
+```
+
+Open the project in Android Studio, sync Gradle and run.
+
+### Google Drive backup (optional)
+
+The OAuth client in this repo is bound to the original signing key, so builds signed with your own key need their own client:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), enable the Google Drive API.
+2. Create an OAuth client of type **Android** with package `com.morterain.securevault` and your signing certificate SHA-1 (`./gradlew signingReport`).
+3. Configure the OAuth consent screen and add your account as a test user, or publish it.
+
+## Roadmap
+
+- TOTP codes
+- Autofill service
+- Security report
+- Argon2id key derivation
+- Restore from Google Drive
+
+## License
+
+Not yet specified.
